@@ -37,7 +37,7 @@ GROQ_VISION_MODEL = st.secrets.get("GROQ_VISION_MODEL", os.environ.get("GROQ_VIS
 
 # ── Malaysian Carbon Tax Constants ───────────
 CARBON_TAX_RATE_RM    = 15.0
-FREE_ALLOWANCE_TONNES = 24_000
+FREE_ALLOWANCE_TONNES = 24
 OFFSET_PRICE_RM       = 20.0
 
 # Emission Factors (kg CO2e per unit)
@@ -1047,7 +1047,7 @@ def render_carbon_calculator():
     st.divider()
 
     # ── Session state for extracted values ───────
-    for k, v in [("s1_petrol_l", 0.0), ("s1_diesel_l", 0.0),
+    for k, v in [("s1_petrol_l", 0.0), ("s1_diesel_l", 0.0), ("s1_lpg_kg", 0.0),
                  ("s2_kwh", 0.0), ("s3_km", 0.0), ("s3_log_fuel", 0.0)]:
         if k not in st.session_state:
             st.session_state[k] = v
@@ -1130,7 +1130,8 @@ def render_carbon_calculator():
             diesel_l = st.number_input("Diesel (litres)", min_value=0.0,
                 value=st.session_state.s1_diesel_l, step=1.0, key=f"diesel_l_in_{fk}")
         with c3:
-            lpg_kg = st.number_input("LPG (kg)", min_value=0.0, value=0.0, step=1.0, key=f"lpg_kg_{fk}")
+            lpg_kg = st.number_input("LPG (kg)", min_value=0.0,
+                value=st.session_state.s1_lpg_kg, step=1.0, key=f"lpg_kg_{fk}")
 
         s1_kg = petrol_l*EF["petrol_litre"] + diesel_l*EF["diesel_litre"] + lpg_kg*EF["lpg_kg"]
         st.info(f"**Scope 1 Subtotal: {s1_kg/1000:.4f} t CO₂e**")
