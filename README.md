@@ -7,7 +7,7 @@
 10 Minutes Pitching Video
 --------------------------------------------------------------------------------
 
-Click here: 
+Click here: https://drive.google.com/file/d/1YqaoK7lMT5FeD53-3-1N-HPvcY1VZf5S/view?usp=sharing
 
 --------------------------------------------------------------------------------
 FILES IN THIS PROJECT
