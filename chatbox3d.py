@@ -492,7 +492,7 @@ def generate_procurement_report(messages: list) -> dict:
             chat_lines.append(f"[{ts}] {sender}: {text}")
     chat_text = "\n".join(chat_lines)
 
-    # ── Step 2: Pull LCA + materials data from DB ─────────────────────
+    # ── Step 2: Pull ALL LCA + materials data from DB ─────────────────────
     conn = sqlite3.connect(DB_NAME)
     c    = conn.cursor()
     c.execute("SELECT material, ghg_impact, energy_saving, cost_advantage FROM lca_metrics")
@@ -502,7 +502,7 @@ def generate_procurement_report(messages: list) -> dict:
     c.execute("SELECT source, page_num, content FROM knowledge_base WHERE "
               "LOWER(content) LIKE '%steel%' OR LOWER(content) LIKE '%concrete%' "
               "OR LOWER(content) LIKE '%ppvc%' OR LOWER(content) LIKE '%carbon tax%' "
-              "OR LOWER(content) LIKE '%lca%' LIMIT 5")
+              "OR LOWER(content) LIKE '%lca%' LIMIT 20")
     kb_rows  = c.fetchall()
     conn.close()
 
@@ -517,29 +517,65 @@ def generate_procurement_report(messages: list) -> dict:
     ) or "No materials logged yet."
 
     kb_summary = "\n".join(
-        f"[{r[0]} p.{r[1]}] {r[2][:200].replace(chr(10),' ')}"
+        f"[{r[0]} p.{r[1]}] {r[2][:300].replace(chr(10),' ')}"
         for r in kb_rows
     ) or "No knowledge base content."
 
     # ── Step 3: Single AI call to produce the full report ─────────────────
     prompt = f"""You are GreenLoom AI — a sustainability and procurement analyst for a Malaysian construction firm.
 
-TASK: Analyse the team chat and produce ONE concise procurement recommendation report.
+TASK: Analyse the team chat below and produce ONE concise procurement recommendation report.
+Do NOT reply sentence-by-sentence. Read everything first, then produce the final report.
 
-CHAT:
+──────────────── CHAT HISTORY ────────────────
 {chat_text}
 
-LCA: {lca_summary}
+──────────────── DATABASE: LCA METRICS ────────────────
+{lca_summary}
 
-MATERIALS: {mat_summary}
+──────────────── DATABASE: MATERIALS ────────────────
+{mat_summary}
 
-KB: {kb_summary[:1500]}
+──────────────── KNOWLEDGE BASE EXCERPTS ────────────────
+{kb_summary[:3000]}
 
-EF: Tax RM {CARBON_TAX_RATE_RM}/t | Steel virgin 1.91 | Steel recycled 0.43 | Concrete 0.13 | Cement 0.89 kg CO2e/kg
+──────────────── EMISSION FACTORS ────────────────
+Malaysian Carbon Tax: RM {CARBON_TAX_RATE_RM}/tonne CO2e
+Steel (virgin): 1.91 kg CO2e/kg | Steel (recycled): 0.43 kg CO2e/kg
+Concrete: 0.13 kg CO2e/kg | Cement: 0.89 kg CO2e/kg
 
-Report sections: 1) Items Discussed 2) Options Analysis (cost+carbon+ESG) 3) Carbon Tax Calc 4) CEO Recommendation 5) JSON captured data [{item, qty_kg, carbon_factor, hs_code, price_rm}].
+──────────────── REPORT FORMAT ────────────────
+Generate a professional report with these sections:
 
-Be concise and data-driven."""
+## 1. Procurement Items Discussed
+List each material/item mentioned, with quantities and prices from the chat.
+
+## 2. Supplier Options Analysis
+For EACH option discussed (e.g. Option A vs B, Steel vs Concrete PPVC):
+- Cost (upfront + carbon tax liability)
+- Carbon emissions (kg CO2e, calculated from EF data)
+- LCA data from database (reference source)
+- Delivery timeline / operational impact
+- ESG/compliance implications
+
+## 3. Carbon Tax Calculation
+Show the working:
+- Emissions per option (tonnes CO2e)
+- Carbon tax @ RM {CARBON_TAX_RATE_RM}/tonne
+- Net cost comparison
+
+## 4. CEO Recommendation
+Clear winner with justification citing the LCA database and carbon tax policy.
+
+## 5. Captured Data for Carbon Calculator
+List every item to be transferred to the carbon calculator as a JSON block:
+```json
+[
+  {{"item": "material name", "qty_kg": 0, "carbon_factor": 0, "hs_code": "", "price_rm": 0}}
+]
+```
+
+Be concise and data-driven. Cite database sources where applicable."""
 
     report_text = None
     last_err = None
@@ -555,7 +591,7 @@ Be concise and data-driven."""
                         {"role": "user", "content": prompt}
                     ],
                     "temperature": 0.2,
-                    "max_tokens": 2000
+                    "max_tokens": 3000
                 },
                 timeout=180)
             resp.raise_for_status()
