@@ -8,7 +8,7 @@
 FILES IN THIS PROJECT
 --------------------------------------------------------------------------------
 
-  chatbox3.py               — Main application (run this file)
+  chatbox3d.py               — Main application (run this file)
   Data_extract.py           — Standalone PDF extraction utility (legacy helper)
   chat_data.json            — Chat messages and user credentials
   green_loom_production.db  — SQLite database (auto-created on first run)
@@ -46,7 +46,7 @@ Option 2:
     Run on local environment:
 
   1. Place all project files in the same folder:
-       chatbox3.py
+       chatbox3d.py
        chat_data.json
        green_loom_production.db
 
@@ -58,7 +58,7 @@ Option 2:
 
   3. Open a terminal in that folder and run:
 
-       streamlit run chatbox3.py
+       streamlit run chatbox3d.py
 
   4. A browser window will open automatically at:
 
@@ -222,15 +222,15 @@ AI ENGINES USED
     Model  : ilmu-glm-5.1
     Endpoint: https://api.ilmu.ai/v1/chat/completions
     Used for: @AI chat replies, Generate Report, Supplier Recommendation
-    Key    : Configured in chatbox3.py (Z_AI_API_KEY)
+    Key    : Configured in chatbox3d.py (Z_AI_API_KEY)
 
   Groq Vision AI (Receipt & Waste Image Extraction)
     Model  : meta-llama/llama-4-scout-17b-16e-instruct
     Endpoint: https://api.groq.com/openai/v1/chat/completions
     Used for: Petrol/diesel/electricity receipt OCR, waste identification
-    Key    : Configured in chatbox3.py (GROQ_API_KEY)
+    Key    : Configured in chatbox3d.py (GROQ_API_KEY)
 
-  NOTE: Both API keys are pre-configured in chatbox3.py. Do not share these
+  NOTE: Both API keys are pre-configured in chatbox3d.py. Do not share these
   keys publicly. Rotate them if the application is deployed to production.
 
 --------------------------------------------------------------------------------
@@ -377,7 +377,7 @@ KNOWN LIMITATIONS
   - Chat data is stored in chat_data.json as plain text. For production
     deployment, migrate to a proper database with authentication.
 
-  - API keys are hardcoded in chatbox3.py. Use environment variables for
+  - API keys are hardcoded in chatbox3d.py. Use environment variables for
     any production or public deployment.
 
 --------------------------------------------------------------------------------
