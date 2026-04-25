@@ -577,24 +577,34 @@ List every item to be transferred to the carbon calculator as a JSON block:
 
 Be concise and data-driven. Cite database sources where applicable."""
 
-    try:
-        resp = requests.post(
-            f"{CUSTOM_BASE_URL}/chat/completions",
-            headers={"Authorization": f"Bearer {Z_AI_API_KEY}", "Content-Type": "application/json"},
-            json={
-                "model": MODEL_NAME,
-                "messages": [
-                    {"role": "system", "content": "You are GreenLoom AI. Generate a single comprehensive procurement report. Do not respond to individual sentences."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.2,
-                "max_tokens": 3000
-            },
-            timeout=90)
-        resp.raise_for_status()
-        report_text = resp.json()["choices"][0]["message"]["content"]
-    except Exception as e:
-        return {"report_text": f"⚠️ Report generation failed: {str(e)}", "captured_data": []}
+    report_text = None
+    last_err = None
+    for attempt in range(3):
+        try:
+            resp = requests.post(
+                f"{CUSTOM_BASE_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {Z_AI_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "model": MODEL_NAME,
+                    "messages": [
+                        {"role": "system", "content": "You are GreenLoom AI. Generate a single comprehensive procurement report. Do not respond to individual sentences."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 3000
+                },
+                timeout=180)
+            resp.raise_for_status()
+            report_text = resp.json()["choices"][0]["message"]["content"]
+            break
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            last_err = e
+            if attempt < 2:
+                import time; time.sleep(5 * (attempt + 1))
+        except Exception as e:
+            return {"report_text": f"⚠️ Report generation failed: {str(e)}", "captured_data": []}
+    if report_text is None:
+        return {"report_text": f"⚠️ Report generation failed after 3 retries: {str(last_err)}", "captured_data": []}
 
     # ── Step 4: Extract the JSON captured_data block ───────────────────────
     captured_data = []
